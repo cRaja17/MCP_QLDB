@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MCP WebSocket Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #question { width: 300px; padding: 5px; }
+        #results { margin-top: 20px; border: 1px solid #ccc; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>MCP WebSocket Client</h1>
+    <input type="text" id="question" placeholder="Nhập câu hỏi (ví dụ: Tìm dự án ở Hà Nội)">
+    <button onclick="sendQuestion()">Gửi</button>
+    <div id="results"></div>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:8765');
+        let queryId = 1;
+
+        const sendQuery = (question, id) => {
+            socket.send(JSON.stringify({
+                jsonrpc: '2.0',
+                method: 'query_projects',
+                params: { question },
+                id
+            }));
+        };
+
+        socket.onmessage = (event) => {
+            const response = JSON.parse(event.data);
+            document.getElementById('results').innerHTML = "";
+            if (response.result) {
+                const resultDiv = document.getElementById('results');
+                const result = response.result;
+                resultDiv.innerHTML += `
+                    <p><strong>SQL:</strong> ${result.sql_query}</p>
+                    <p><strong>Trả lời:</strong> ${result.answer}</p>
+                    <p><strong>Dữ liệu:</strong> ${JSON.stringify(result.data, null, 2)}</p>
+                    <hr>
+                `;
+            } else if (response.error) {
+                console.error('Error:', response.error);
+                document.getElementById('results').innerHTML += `<p style="color: red;">Lỗi: ${response.error.message}</p><hr>`;
+            }
+        };
+
+        socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            document.getElementById('results').innerHTML += `<p style="color: red;">Lỗi kết nối WebSocket</p><hr>`;
+        };
+
+        socket.onclose = () => {
+            console.log('WebSocket closed');
+            document.getElementById('results').innerHTML += `<p>Đã ngắt kết nối</p>`;
+        };
+
+        function sendQuestion() {
+            const question = document.getElementById('question').value;
+            if (question) {
+                sendQuery(question, queryId++);
+                document.getElementById('question').value = '';
+            } else {
+                alert('Vui lòng nhập câu hỏi');
+            }
+        }
+    </script>
+</body>
+</html>
