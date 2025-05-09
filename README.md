@@ -12,3 +12,12 @@ install
 
 -- python mcp_mysql_server.py
 
+-- env 
+
+`MYSQL_HOST=
+MYSQL_PORT=
+MYSQL_USER=
+MYSQL_PASS=
+MYSQL_DB=
+API_LLAMA=
+`
